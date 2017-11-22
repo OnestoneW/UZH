@@ -25,29 +25,48 @@ if __name__ == "__main__":
     gaussian_events = sp.norm(loc=5, scale=2).rvs(20)
     #bins = np.linspace(min(gaussian_events), max(gaussian_events), 8)
 
-    mu_x = np.linspace(3, 7, 500)
-    sigma_x = np.linspace(0.5, 3, 500)
-    mu_values = []
-    sigma_values = []
-    for mu in mu_x:
-        for sigma in sigma_x:
-            mu_values.append(likelihood_of_gaussian(mu, sigma, gaussian_events))
+    mu_x = np.linspace(3, 7, 50)
+    sigma_x = np.linspace(0.5, 3, 50)
+    likelihood_matrix = np.zeros((mu_x.size, sigma_x.size))
+    for mu in range(len(mu_x)):
+        for sigma in range(len(sigma_x)):
+            likelihood_matrix[mu, sigma] = np.exp(-1/2*20*np.log(2*np.pi*sigma_x[sigma]**2)-sum((gaussian_events-mu_x[mu])**2/(2*sigma_x[sigma]**2)))
 
-    for sigma in sigma_x:
-        for mu in mu_x:
-            sigma_values.append(likelihood_of_gaussian(mu, sigma, gaussian_events))
     plb.figure()
-    plb.plot(np.linspace(min(mu_values), max(mu_values), len(mu_values)), mu_values, 'b', label="mu estimation")
-    plb.figure()
-    plb.plot(np.linspace(min(sigma_values), max(sigma_values), len(sigma_values)), sigma_values, 'r', label="sigma estimation")
-    plb.legend()
-    print("likelihood has maximum at mu=", np.linspace(min(mu_values), max(mu_values), len(mu_values))[mu_values.index(max(mu_values))])
-    print("likelihood has maximum at sigma=", np.linspace(min(sigma_values), max(sigma_values), len(sigma_values))[sigma_values.index(max(sigma_values))])
+    X, Y = plb.meshgrid(mu_x, sigma_x)
+    plb.contour(X, Y, likelihood_matrix.T)
+    plb.xlabel("mu")
+    plb.ylabel("sigma")
+    plb.title("Countour Plot of estimators")
+    max_value = np.max(likelihood_matrix)
+    local_max_index = np.where(likelihood_matrix == max_value)
+    max_x = X[local_max_index[0], local_max_index[1]]
+    max_y = Y[local_max_index[0], local_max_index[1]]
+    plb.plot(max_x, max_y, marker='o')
+    print('the max value will be reached at mu: ', max_x, ' and sigma: ', max_y)
     plb.show()
 
+    # Exercise 2, 6.:
+    x_maximum_values = []
+    y_maximum_values = []
+    for i in range(1000):
+        print(i, "processed")
+        gaussian_sample = sp.norm(loc=5, scale=2).rvs(20)
+        likelihood_matrix = np.zeros((mu_x.size, sigma_x.size))
+        for mu in range(len(mu_x)):
+            for sigma in range(len(sigma_x)):
+                likelihood_matrix[mu, sigma] = np.exp(-1 / 2 * 20 * np.log(2 * np.pi * sigma_x[sigma] ** 2) - sum(
+                    (gaussian_events - mu_x[mu]) ** 2 / (2 * sigma_x[sigma] ** 2)))
+        max_value = np.max(likelihood_matrix)
+        local_max_index = np.where(likelihood_matrix == max_value)
+        max_x = float(X[local_max_index[0], local_max_index[1]])
+        max_y = float(Y[local_max_index[0], local_max_index[1]])
+        x_maximum_values.append(max_x)
+        y_maximum_values.append(max_y)
 
-    '''
+    print("Start histogram")
+    print(x_maximum_values)
     plb.figure()
-    plb.hist(gaussian_events, bins=bins)
+    plb.hist(x_maximum_values, bins=np.linspace(min(x_maximum_values), max(x_maximum_values), 30), histtype='step')
+    plb.hist(y_maximum_values, bins=np.linspace(min(y_maximum_values), max(y_maximum_values), 30), histtype='step')
     plb.show()
-    '''
